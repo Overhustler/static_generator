@@ -145,19 +145,51 @@ def process_block(block_type, block):
             return block_node
 
         case BlockType.HEADING:
-            return "Handling a heading block"
+            split_block = structure_heading(block)
+            htag = "h" + str(split_block[0])
+            block_node = ParentNode(htag, text_to_children(split_block[1]))
+            return block_node
 
         case BlockType.CODE:
-            return "Handling a code block"
+            block_node = ParentNode("pre", structure_code(block))
+            return block_node
 
         case BlockType.QUOTE:
-            return "Handling a quote block"
+            stripped_block = structure_quote(block)
+            block_node = ParentNode("blockquote", text_to_children(stripped_block))
+            return block_node
 
         case BlockType.UNORDERED_LIST:
-            return "Handling an unordered list"
+            block_node = ParentNode("ul", text_to_children(structure_list(block)))
+            return block_node
 
         case BlockType.ORDERED_LIST:
-            return "Handling an ordered list"
+            block_node = ParentNode("ol", text_to_children(structure_list(block)))
+            return block_node
 
         case _:
             raise ValueError(f"Unknown block type: {block_type}")
+    
+def structure_heading(block):
+    seperated_hashtags = block.split(" ", 1)
+    hashtags = seperated_hashtags[0]
+    rest_of_block = seperated_hashtags[1].lstrip()
+    num_of =  hashtags.count("#")
+    return num_of, rest_of_block
+
+def structure_quote(block):
+    new_block = ""
+    for line in block.split("\n"):
+        new_block += line.split(" ", 1)[1].lstrip()
+    return new_block
+
+def structure_list(block):
+    nodes = []
+    for line in block.split("\n"):
+        nodes.append(ParentNode("li", text_to_children(line)))
+    return nodes
+def structure_code(block):
+    block_text = block[4:-4]
+    code_textnode = TextNode(block_text, TextType.CODE)
+    code_node = text_node_to_html_node(code_textnode)
+    return code_node
