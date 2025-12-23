@@ -151,7 +151,7 @@ def process_block(block_type, block):
             return block_node
 
         case BlockType.CODE:
-            block_node = ParentNode("pre", structure_code(block))
+            block_node = ParentNode("pre", [structure_code(block)])
             return block_node
 
         case BlockType.QUOTE:
@@ -160,11 +160,11 @@ def process_block(block_type, block):
             return block_node
 
         case BlockType.UNORDERED_LIST:
-            block_node = ParentNode("ul", text_to_children(structure_list(block)))
+            block_node = ParentNode("ul", structure_list(block))
             return block_node
 
         case BlockType.ORDERED_LIST:
-            block_node = ParentNode("ol", text_to_children(structure_list(block)))
+            block_node = ParentNode("ol", structure_list(block))
             return block_node
 
         case _:
@@ -178,16 +178,19 @@ def structure_heading(block):
     return num_of, rest_of_block
 
 def structure_quote(block):
-    new_block = ""
+    lines = []
     for line in block.split("\n"):
-        new_block += line.split(" ", 1)[1].lstrip()
-    return new_block
+        lines.append(line.split(" ", 1)[1].lstrip())
+    return "\n".join(lines)
 
 def structure_list(block):
     nodes = []
     for line in block.split("\n"):
-        nodes.append(ParentNode("li", text_to_children(line)))
+                # Remove "- ", "* ", or "1. " style markers
+        cleaned = re.sub(r"^(\s*)([-*]|\d+\.)\s+", "", line).strip()
+        nodes.append(ParentNode("li", text_to_children(cleaned)))
     return nodes
+
 def structure_code(block):
     block_text = block[4:-4]
     code_textnode = TextNode(block_text, TextType.CODE)

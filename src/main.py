@@ -1,7 +1,10 @@
 from textnode import *
+import constants
+from mainfuctions import copy_directory, delete_and_remake_dir
+
 def main():
-    test_text_node = TextNode("test text", TextType.TEXT)
-    print(test_text_node)
+    delete_and_remake_dir(constants.PUBLICPATH)
+    copy_directory(constants.STATICPATH, constants.PUBLICPATH)
     
 if __name__ == "__main__":
     main()

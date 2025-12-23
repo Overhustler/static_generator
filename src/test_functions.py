@@ -339,5 +339,71 @@ class TestMarkdownToBlocks(unittest.TestCase):
         md = "Line1\nLine2\n\nNext block"
         result = markdown_to_blocks(md)
         self.assertEqual(result, ["Line1\nLine2", "Next block"])
+
+class TestMarkdownToHtmlNode(unittest.TestCase):
+
+    def test_single_paragraph(self):
+        md = "Hello world"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><p>Hello world</p></div>"
+        )
+
+    def test_multiple_paragraphs(self):
+        md = "First paragraph\n\nSecond paragraph"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><p>First paragraph</p><p>Second paragraph</p></div>"
+        )
+
+    def test_heading(self):
+        md = "# Heading one"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><h1>Heading one</h1></div>"
+        )
+
+    def test_code_block(self):
+        md = "```\nprint('hi')\n```"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><pre><code>print('hi')</code></pre></div>"
+        )
+
+    def test_quote(self):
+        md = "> quoted text"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><blockquote>quoted text</blockquote></div>"
+        )
+
+    def test_unordered_list(self):
+        md = "- item one\n- item two"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><ul><li>item one</li><li>item two</li></ul></div>"
+        )
+
+    def test_ordered_list(self):
+        md = "1. first\n2. second"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><ol><li>first</li><li>second</li></ol></div>"
+        )
+
+    def test_mixed_blocks(self):
+        md = "# Title\n\nParagraph text\n\n- a\n- b"
+        node = markdown_to_html_node(md)
+        self.assertEqual(
+            node.to_html(),
+            "<div><h1>Title</h1><p>Paragraph text</p><ul><li>a</li><li>b</li></ul></div>"
+        )
 if __name__ == "__main__":
     unittest.main()
