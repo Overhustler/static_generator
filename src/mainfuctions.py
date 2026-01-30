@@ -3,7 +3,8 @@ import shutil
 import logging
 from datetime import datetime
 from constants import LOGPATH
-
+from functions import markdown_to_html_node
+from pathlib import Path
 def copy_directory(source_dir, destination_dir):
 
     with os.scandir(source_dir) as entries:
@@ -43,4 +44,64 @@ def delete_and_remake_dir(directory_path):
     os.makedirs(directory_path)
     
 def extract_title(markdown):
-    pass
+    content = read_file(markdown)
+    lines = content.splitlines()
+    heading = ""
+    for line in lines:
+        if line.startswith("# "):
+            heading = line
+            break
+    if heading == "":
+        raise ValueError("There is no H1 heading")
+    heading = heading[1:].strip()
+    return heading
+
+def generate_page(from_path, template_path, dest_path):
+    print(f"Generating page from {from_path} to {dest_path} using {template_path}")
+    from_file_str = read_file(from_path)
+    template_file_str = read_file(template_path)
+    html_content = markdown_to_html_node(from_file_str)
+    title = extract_title(from_path)
+    template_file_str = template_file_str.replace("{{ Title }}", title)
+    template_file_str = template_file_str.replace("{{ Content }}", html_content.to_html())
+    dir_path = os.path.dirname(dest_path)
+    if dir_path:
+        os.makedirs(dir_path, exist_ok=True)
+    try:
+        # 'with' automatically handles opening and closing the file
+        with open(dest_path, 'w') as file:
+            file.write(template_file_str)
+
+    except FileNotFoundError:
+        # Handles cases where the directory might not exist (Python 3.4+)
+        print(f"Error: The directory for '{filename}' was not found.")
+    except PermissionError:
+        # Handles cases with insufficient permissions to write to the file/location
+        print(f"Error: Permission denied when trying to write to '{filename}'.")
+    except IOError as e:
+        # General I/O error handling (e.g., disk full, other OS errors)
+        print(f"Error: An I/O error occurred: {e}")
+    except Exception as e:
+        # Catches any other unexpected exceptions
+        print(f"An unexpected error occurred: {e}")
+
+def generate_pages_recursive(dir_path_content, template_path, dest_dir_path):
+    base_path = Path(dir_path_content)
+    md_files = list(base_path.rglob('*.md'))
+    md_file_strings = [str(p) for p in md_files]
+    for file in md_file_strings:
+        p = Path(file)
+        relative = p.relative_to(dir_path_content)
+        dest = Path(dest_dir_path) / relative
+        dest = dest.with_suffix(".html")
+        generate_page(file, template_path, str(dest))
+
+def read_file(file_path):
+    try:
+        with open(file_path, 'r') as file:
+            content = file.read()
+    except FileNotFoundError:
+        print(f"Error: The file '{file_path}' was not found.")
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+    return content

@@ -180,7 +180,8 @@ def structure_heading(block):
 def structure_quote(block):
     lines = []
     for line in block.split("\n"):
-        lines.append(line.split(" ", 1)[1].lstrip())
+        if line.lstrip("> ") != "":
+            lines.append(line.split(" ", 1)[1].lstrip())
     return "\n".join(lines)
 
 def structure_list(block):
